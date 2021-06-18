@@ -32,8 +32,8 @@ void record_preferences(int ranks[]);
 void record_preference(int index, int ranks[]);
 void add_pairs(void);
 void sort_pairs(void);
-int divide(pair sorted[], int index, int count);
-void sort(pair sorted[], int sorted_index, int index, int count);
+void divide(pair sorted[], int index, int count);
+void sort(pair sorted[], int index, int count);
 void lock_pairs(void);
 void print_winner(void);
 int chase_source(int candidate_index);
@@ -168,94 +168,76 @@ void sort_pairs(void)
 {
     //sort divides the parent set, then merges each recursive set into a sorted array
     pair sorted_pairs[pair_count];
+    
     divide(sorted_pairs, 0, pair_count);
-
-    printf("\n\nunsorted pairs:\n");
-    for (int i = 0; i < pair_count; i++)
-    {
-        printf("candidate %d -> ", pairs[i].winner);
-        printf("%d\n", pairs[i].loser);
-    }
-
-    printf("\nsorted pairs:\n");
+    
     for (int i = 0; i < pair_count; i++)
     {
         pairs[i] = sorted_pairs[i];
-
-        printf("candidate %d -> ", pairs[i].winner);
-        printf("%d\n", pairs[i].loser);
     }
-    printf("\n");
     return;
 }
 
-int divide(pair sorted[], int start, int end)
+void divide(pair sorted[], int start, int end)
 {
-    int sorted1 = 1;
-    int sorted2 = 1;
-
     if ((end - start) > 1) {
         // subdivides the indices if the number of items between them is greater than 1
-        sorted1 = divide(sorted, start, end/2);
-        sorted2 = divide(sorted, (start + end/2), end);
+        divide(sorted, start, end/2);
+        divide(sorted, (start + end/2), end);
 
+        // merges each set of sorted pairs
+        sort(sorted, start, end);
     }
-    // merges each set of sorted pairs
-    sort(sorted, (sorted1 + sorted2), start, end);
+    // printf("index: %d\n", start);
 
-    //returns the count of the merged arrays
-    return start + end;
 }
 
-void sort(pair sorted[], int sorted_index, int start, int end)
+void sort(pair sorted[], int start, int end)
 {
-
-    // the index of a set (set1_index, set2_index) points at the next item to be sorted
-    int midpoint = (end - start)/2;
     int set2_index = (end - start)/2;
+    int index = start;
 
-    for (int set1_index = start; set1_index <= midpoint; set1_index++)
+    for (int set1_index = start; set1_index <= (end - start)/2; set1_index++)
     {
-        if (set2_index == end)
+        if (set2_index == end && end != (end - start + 1)/2)
         {
             //set2 is fully merged, so the remaining items from set1 are appended to the sorted set
-            sorted[sorted_index] = pairs[set1_index];
-            sorted_index++;
-
+            sorted[index] = pairs[start];
+            index++;
             continue;
         }
 
         int winner1 = pairs[set1_index].winner;
-        for (int i = set2_index; i <= end; i++)
+        for (int i = set2_index; i < end; i++)
         {
-            if (set1_index == midpoint && midpoint != start)
+            if (set1_index == (end - start)/2 && set2_index != start)
             {
                 //set1 is fully merged, so the remaining items from set2 are appended to the sorted set
-                sorted[sorted_index] = pairs[i];
-                sorted_index++;
+                sorted[index] = pairs[set2_index];
+                set2_index++;
+                index++;
                 continue;
             }
 
-            int winner2 = pairs[set2_index].winner;
-            if (preferences[winner1][winner2] == 0 || preferences[winner2][winner1] == 0)
+            int winner2 = pairs[i].winner;
+            if (preferences[winner1][winner2] == 0 && preferences[winner2][winner1] == 0)
             {
                 continue;
             }
 
-            if (preferences[winner1][winner2] > preferences[winner2][winner1])
+            if (preferences[winner1][winner2] >= preferences[winner2][winner1])
             {
                 // winner1 is preferred over winner2, so winner1 is added to the sorted array, and execution "breaks" to set1_index_+1
-                sorted[sorted_index] = pairs[set1_index];
-                sorted_index++;
-
+                sorted[index] = pairs[set1_index];
+                index++;
                 break;
             }
-            else if (preferences[winner1][winner2] <= preferences[winner2][winner1])
+            else if (preferences[winner1][winner2] < preferences[winner2][winner1])
             {
                 // winner2 is preferred over winner1, so winner2 is added to the sorted array, and execution continues to i+1
-                sorted[sorted_index] = pairs[set2_index];
+                sorted[index] = pairs[set2_index];
                 set2_index++;
-                sorted_index++;
+                index++;
             }
         }
     }
