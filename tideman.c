@@ -96,7 +96,9 @@ int main(int argc, string argv[])
 
     add_pairs();
     sort_pairs();
+    // printf("sort_pairs complete");
     lock_pairs();
+    // printf("lock_pairs complete");
     print_winner();
     return 0;
 }
@@ -168,9 +170,8 @@ void sort_pairs(void)
 {
     //sort divides the parent set, then merges each recursive set into a sorted array
     pair sorted_pairs[pair_count];
-    
     divide(sorted_pairs, 0, pair_count);
-    
+
     for (int i = 0; i < pair_count; i++)
     {
         pairs[i] = sorted_pairs[i];
@@ -194,49 +195,31 @@ void divide(pair sorted[], int start, int end)
 
 void sort(pair sorted[], int start, int end)
 {
-    int set2_index = (end - start)/2;
     int index = start;
-
     for (int set1_index = start; set1_index <= (end - start)/2; set1_index++)
     {
-        if (set2_index == end && end != (end - start + 1)/2)
-        {
-            //set2 is fully merged, so the remaining items from set1 are appended to the sorted set
-            sorted[index] = pairs[start];
-            index++;
-            continue;
-        }
-
         int winner1 = pairs[set1_index].winner;
-        for (int i = set2_index; i < end; i++)
+        int loser1 = pairs[set1_index].loser;
+        for (int i = (end - start)/2; i <= end; i++)
         {
-            if (set1_index == (end - start)/2 && set2_index != start)
-            {
-                //set1 is fully merged, so the remaining items from set2 are appended to the sorted set
-                sorted[index] = pairs[set2_index];
-                set2_index++;
-                index++;
-                continue;
-            }
-
             int winner2 = pairs[i].winner;
-            if (preferences[winner1][winner2] == 0 && preferences[winner2][winner1] == 0)
+            int loser2 = pairs[i].loser;
+            if (preferences[winner1][loser1] == 0 && preferences[winner2][loser2] == 0)
             {
                 continue;
             }
-
-            if (preferences[winner1][winner2] >= preferences[winner2][winner1])
+            if (preferences[winner1][loser1] > preferences[winner2][loser2])
             {
                 // winner1 is preferred over winner2, so winner1 is added to the sorted array, and execution "breaks" to set1_index_+1
                 sorted[index] = pairs[set1_index];
                 index++;
                 break;
             }
-            else if (preferences[winner1][winner2] < preferences[winner2][winner1])
+            else if (preferences[winner1][loser1] <= preferences[winner2][loser2])
             {
                 // winner2 is preferred over winner1, so winner2 is added to the sorted array, and execution continues to i+1
-                sorted[index] = pairs[set2_index];
-                set2_index++;
+                sorted[index] = pairs[i];
+                // set2_index++;
                 index++;
             }
         }
@@ -313,3 +296,4 @@ int chase_source(candidate_index)
     }
     return candidate_index;
 }
+
