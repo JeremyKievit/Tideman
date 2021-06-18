@@ -32,7 +32,7 @@ void record_preferences(int ranks[]);
 void record_preference(int index, int ranks[]);
 void add_pairs(void);
 void sort_pairs(void);
-void divide(pair sorted[], int sorted_index, int index, int count);
+int divide(pair sorted[], int index, int count);
 void sort(pair sorted[], int sorted_index, int index, int count);
 void lock_pairs(void);
 void print_winner(void);
@@ -167,17 +167,16 @@ void add_pairs(void)
 void sort_pairs(void)
 {
     //sort divides the parent set, then merges each recursive set into a sorted array
-    int sorted_index = 0;
     pair sorted_pairs[pair_count];
-    divide(sorted_pairs, sorted_index, 0, pair_count);
-    
+    divide(sorted_pairs, 0, pair_count);
+
     printf("\n\nunsorted pairs:\n");
     for (int i = 0; i < pair_count; i++)
     {
         printf("candidate %d -> ", pairs[i].winner);
         printf("%d\n", pairs[i].loser);
     }
-    
+
     printf("\nsorted pairs:\n");
     for (int i = 0; i < pair_count; i++)
     {
@@ -190,39 +189,46 @@ void sort_pairs(void)
     return;
 }
 
-void divide(pair sorted[], int sorted_index, int start, int end)
+int divide(pair sorted[], int start, int end)
 {
+    int sorted1 = 1;
+    int sorted2 = 1;
+
     if ((end - start) > 1) {
         // subdivides the indices if the number of items between them is greater than 1
-        divide(sorted, sorted_index, start, end/2);
-        divide(sorted, sorted_index, (start + end/2), end);
+        sorted1 = divide(sorted, start, end/2);
+        sorted2 = divide(sorted, (start + end/2), end);
 
     }
     // merges each set of sorted pairs
-    sort(sorted, sorted_index, start, end);
+    sort(sorted, (sorted1 + sorted2), start, end);
+
+    //returns the count of the merged arrays
+    return start + end;
 }
 
-void sort(pair sorted[], int sorted_index, int index, int count)
+void sort(pair sorted[], int sorted_index, int start, int end)
 {
-    // the index of a set (set1_index, set2_index) points at the next item to be sorted
-    int midpoint = (count - index)/2;
-    int set2_index = (count - index)/2;
 
-    for (int set1_index = index; set1_index <= midpoint; set1_index++)
+    // the index of a set (set1_index, set2_index) points at the next item to be sorted
+    int midpoint = (end - start)/2;
+    int set2_index = (end - start)/2;
+
+    for (int set1_index = start; set1_index <= midpoint; set1_index++)
     {
-        if (set2_index == count)
+        if (set2_index == end)
         {
             //set2 is fully merged, so the remaining items from set1 are appended to the sorted set
             sorted[sorted_index] = pairs[set1_index];
             sorted_index++;
-        
+
             continue;
         }
 
         int winner1 = pairs[set1_index].winner;
-        for (int i = set2_index; i <= count; i++)
+        for (int i = set2_index; i <= end; i++)
         {
-            if (set1_index == midpoint && midpoint != index)
+            if (set1_index == midpoint && midpoint != start)
             {
                 //set1 is fully merged, so the remaining items from set2 are appended to the sorted set
                 sorted[sorted_index] = pairs[i];
@@ -325,4 +331,3 @@ int chase_source(candidate_index)
     }
     return candidate_index;
 }
-
